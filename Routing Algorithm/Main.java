@@ -13,12 +13,13 @@ public class Main {
 
         int numOfRouters = promptUser();
         int matrix[][] = readFile(numOfRouters);
-
+        //The vector containing the shortest amount of jumps to each router from V0 - initialize them with paths from V0
         int dVector[] = new int[numOfRouters];
         for (int i = 0; i < numOfRouters; i++) {
             dVector[i] = matrix[0][i];
         }
 
+        //Vector containing which router to connect to to create the shortest path -1 means no possible connection
         int pVector[] = new int[numOfRouters];
         for (int i = 0; i < numOfRouters; i++) {
             int numCheck = matrix[0][i];
@@ -43,6 +44,7 @@ public class Main {
             int smallestFound = -1;
 
 
+
             int index = 0;
             for (int i = 1; i < numOfRouters; i++) {
 
@@ -55,11 +57,13 @@ public class Main {
                 }
             }
             numToCheck--;
+            if(numToCheck > -1){
+                yPrime.add(", ");
+            }
             dVector[index] = smallestFound;
-            //pVector[index] = index;
             nPrime.add(", V" + index);
             checkedIndexes.add(index);
-            //YPRIME UPDATED
+
             for (int i = 0; i < numOfRouters; i++) {
                 int newLinkCost = smallestFound + matrix[index][i];
                 if (newLinkCost < dVector[i] && i != index) {
@@ -68,16 +72,20 @@ public class Main {
                 }
             }
 
+            yPrime.add("(V" + pVector[index] + ", V" + index + ")");
+
             System.out.println("ITERATION: " + count);
             outputInfo(numOfRouters, dVector, pVector, nPrime, yPrime);
             count++;
         }
 
+        createLinkTable(numOfRouters, dVector, pVector, yPrime);
+
 
     }
 
     public static void outputInfo(int numOfRouters, int dVector[], int pVector[], List<String> nPrime, List<String> yPrime) {
-        System.out.print("D Vector: ");
+        System.out.print("D(i): ");
         for (int i = 0; i < numOfRouters; i++) {
             if (dVector[i] == 1000000) {
                 System.out.print("Infinity ");
@@ -87,7 +95,7 @@ public class Main {
         }
         System.out.println("");
 
-        System.out.print("P Vector: ");
+        System.out.print("P(i): ");
         for (int i = 0; i < numOfRouters; i++) {
             if (pVector[i] == -1) {
                 System.out.print("- ");
@@ -98,21 +106,21 @@ public class Main {
         }
         System.out.println("");
 
-        System.out.print("N Prime: ");
-        for (int i = 0; i < nPrime.size(); i++) {
-            System.out.print(nPrime.get(i));
+        System.out.print("N': ");
+        for (String aNPrime : nPrime) {
+            System.out.print(aNPrime);
         }
         System.out.println("");
 
-        System.out.print("Y Prime: ");
-        for (int i = 0; i < yPrime.size(); i++) {
-            System.out.print(yPrime.get(i) + ", ");
+        System.out.print("Y': ");
+        for (String aYPrime : yPrime) {
+            System.out.print(aYPrime);
         }
         System.out.println("");
 
     }
 
-    public static int promptUser() {
+    private static int promptUser() {
         int numOfRouters = 0;
         Scanner input = new Scanner(System.in);
         while (numOfRouters < 2) {
@@ -123,7 +131,7 @@ public class Main {
         return numOfRouters;
     }
 
-    public static int[][] readFile(int numOfRouters) throws FileNotFoundException {
+    private static int[][] readFile(int numOfRouters) throws FileNotFoundException {
         int matrix[][] = new int[numOfRouters][numOfRouters];
         Scanner scan = new Scanner(new File("C:\\Users\\Eli S\\IdeaProjects\\RoutingAlgorithm\\src\\topo.txt"));
         int row = 0;
@@ -153,16 +161,46 @@ public class Main {
 
 
         }
-
-//        for(int i = 0; i < numOfRouters; i++)
-//        {
-//            for(int j = 0; j < numOfRouters; j++)
-//            {
-//                System.out.printf("%5d ", matrix[i][j]);
-//            }
-//            System.out.println();
-//        }
-
+        
         return matrix;
     }
+
+    private static void createLinkTable(int numberOfRouters, int dVector[], int pVector[], List<String> yPrime){
+        System.out.println("Destination               Link");
+        for(int i = 1; i < numberOfRouters; i++){
+            List<String> path = new ArrayList<>();
+            path.clear();
+            if(pVector[i] == -1 || pVector[i] == 0){
+                path.add("V0, " + "V" + i);
+            }
+            else{
+                int start = pVector[i];
+                while(start != 0){
+
+                    path.add("V" + start);
+                    start = pVector[start];
+                    if(start == 0){
+                        path.add("V" + start);
+                    }
+
+
+                }
+
+            }
+            String finalPath = stringListToString(path);
+            System.out.println("    V" + i + "                  " + finalPath);
+
+        }
+    }
+
+    private static String stringListToString(List<String> string){
+        String finalString = "(";
+        for(int i = string.size(); i > 0; i--){
+            finalString = finalString + string.get(i - 1) + ", ";
+        }
+        finalString = finalString.replaceAll(", $", "");
+        return finalString + ")";
+    }
+
+
 }
