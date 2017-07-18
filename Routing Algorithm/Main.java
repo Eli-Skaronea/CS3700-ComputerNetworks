@@ -1,7 +1,6 @@
-/**
- * Eli Skaronea
- * Assignment 7 - Routing Algorithm
- */
+
+//Eli Skaronea
+//Assignment 7 - Routing Algorithm
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -23,9 +22,13 @@ public class Main {
         int pVector[] = new int[numOfRouters];
         for (int i = 0; i < numOfRouters; i++) {
             int numCheck = matrix[0][i];
-            if (numCheck == 0 || numCheck == 1000000) {
+            if (numCheck == 0) {
                 pVector[i] = -1;
-            } else {
+            }
+            else if(numCheck == 1000000){
+                pVector[i] = -2;
+            }
+            else {
                 pVector[i] = 0;
             }
         }
@@ -47,7 +50,6 @@ public class Main {
 
             int index = 0;
             for (int i = 1; i < numOfRouters; i++) {
-
                 if (!checkedIndexes.contains(i)) {
                     int cost = dVector[i];
                     if ((cost < smallestFound && cost != -1) || smallestFound == -1) {
@@ -57,7 +59,7 @@ public class Main {
                 }
             }
             numToCheck--;
-            if(numToCheck > -1){
+            if(numToCheck > -1 && numToCheck != numOfRouters - 2){
                 yPrime.add(", ");
             }
             dVector[index] = smallestFound;
@@ -78,9 +80,7 @@ public class Main {
             outputInfo(numOfRouters, dVector, pVector, nPrime, yPrime);
             count++;
         }
-
-        createLinkTable(numOfRouters, dVector, pVector, yPrime);
-
+        createLinkTable(numOfRouters, pVector);
 
     }
 
@@ -107,14 +107,14 @@ public class Main {
         System.out.println("");
 
         System.out.print("N': ");
-        for (String aNPrime : nPrime) {
-            System.out.print(aNPrime);
+        for (String outNPrime : nPrime) {
+            System.out.print(outNPrime);
         }
         System.out.println("");
 
         System.out.print("Y': ");
-        for (String aYPrime : yPrime) {
-            System.out.print(aYPrime);
+        for (String outYPrime : yPrime) {
+            System.out.print(outYPrime);
         }
         System.out.println("");
 
@@ -133,45 +133,63 @@ public class Main {
 
     private static int[][] readFile(int numOfRouters) throws FileNotFoundException {
         int matrix[][] = new int[numOfRouters][numOfRouters];
-        Scanner scan = new Scanner(new File("C:\\Users\\Eli S\\IdeaProjects\\RoutingAlgorithm\\src\\topo.txt"));
-        int row = 0;
-        while (scan.hasNextLine()) {
-            row++;
-            int firstValue = scan.nextInt();
-            int secondValue = scan.nextInt();
-            int cost = scan.nextInt();
+        try{
+            File file = new File("topo.txt");
+            Scanner scan = new Scanner(file);
+            int row = 0;
+            while (scan.hasNextLine()) {
+                row++;
+                int firstValue = scan.nextInt();
+                int secondValue = scan.nextInt();
+                int cost = scan.nextInt();
 
-            if (firstValue > numOfRouters - 1 || secondValue > numOfRouters - 1) {
-                System.out.println("There is an invalid router number on row " + row);
-                System.err.println("File has data on router not specified by user");
-                break;
-            } else {
-                matrix[firstValue][secondValue] = cost;
-                matrix[secondValue][firstValue] = cost;
-            }
-            for (int i = 0; i < numOfRouters; i++) {
-                for (int j = 0; j < numOfRouters; j++) {
-                    if (i == j) {
-                        matrix[i][j] = 0;
-                    } else if (matrix[i][j] == 0) {
-                        matrix[i][j] = 1000000;
+                if (firstValue > numOfRouters - 1 || secondValue > numOfRouters - 1) {
+                    System.out.println("There is an invalid data on row " + row);
+                    System.err.println("File has data on router not specified by user");
+                    scan.close();
+                    String filename = "";
+                    Scanner input = new Scanner(System.in);
+                    while(filename.isEmpty()){
+                        System.out.print("Please enter the name of the correct file or make changes and re-enter name of file: ");
+                        filename = input.nextLine();
+                        file = new File(filename);
+                        scan = new Scanner(file);
+                        row = 0;
+                    }
+
+                } else {
+                    matrix[firstValue][secondValue] = cost;
+                    matrix[secondValue][firstValue] = cost;
+                }
+                for (int i = 0; i < numOfRouters; i++) {
+                    for (int j = 0; j < numOfRouters; j++) {
+                        if (i == j) {
+                            matrix[i][j] = 0;
+                        } else if (matrix[i][j] == 0) {
+                            matrix[i][j] = 1000000;
+                        }
                     }
                 }
+
             }
-
-
         }
-        
+        catch (FileNotFoundException e){
+            e.printStackTrace();
+        }
+
         return matrix;
     }
 
-    private static void createLinkTable(int numberOfRouters, int dVector[], int pVector[], List<String> yPrime){
+    private static void createLinkTable(int numberOfRouters, int pVector[]){
         System.out.println("Destination               Link");
         for(int i = 1; i < numberOfRouters; i++){
             List<String> path = new ArrayList<>();
             path.clear();
             if(pVector[i] == -1 || pVector[i] == 0){
-                path.add("V0, " + "V" + i);
+                path.add("V0");
+            }
+            else if(pVector[i] == -2){
+                path.add("No connections to the node found");
             }
             else{
                 int start = pVector[i];
@@ -188,8 +206,7 @@ public class Main {
 
             }
             String finalPath = stringListToString(path);
-            System.out.println("    V" + i + "                  " + finalPath);
-
+            System.out.println("      V" + i + "                  " + finalPath);
         }
     }
 
